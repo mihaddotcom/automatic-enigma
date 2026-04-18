@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Work Tracker</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #f5e1c8;
+}
+
+.container {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+}
+
+h2 {
+    margin-bottom: 5px;
+}
+
+.buttons button {
+    padding: 12px 25px;
+    margin: 10px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.worked { background: #2e9d4f; color: white; }
+.off { background: #777; color: white; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #999;
+}
+
+.work-row { background: #a8c5a8; }
+.off-row { background: #b0b0b0; }
+
+.summary {
+    margin-top: 20px;
+}
+
+.summary-box {
+    display: inline-block;
+    width: 45%;
+    padding: 15px;
+    font-size: 20px;
+    margin: 5px;
+}
+
+.work-summary { background: #a8c5a8; }
+.off-summary { background: #e59c8f; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2 id="greeting"></h2>
+    <p id="today"></p>
+
+    <div class="buttons">
+        <button class="worked" onclick="markStatus('Worked')">Worked</button>
+        <button class="off" onclick="markStatus('Off')">Off</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="summary">
+        <h3>Weekly Summary</h3>
+        <div class="summary-box work-summary" id="workedCount">0</div>
+        <div class="summary-box off-summary" id="offCount">0</div>
+    </div>
+</div>
+
+<script>
+const today = new Date();
+
+document.getElementById("greeting").innerText =
+    "Good Evening, Mihad!";
+
+document.getElementById("today").innerText =
+    "Today is " + today.toDateString();
+
+// Save status
+function markStatus(status) {
+    const key = today.toISOString().split('T')[0];
+    let data = JSON.parse(localStorage.getItem("workData")) || {};
+    data[key] = status;
+    localStorage.setItem("workData", JSON.stringify(data));
+    loadData();
+}
+
+// Get Monday of current week
+function getStartOfWeek(date) {
+    let d = new Date(date);
+    let day = d.getDay();
+    let diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+}
+
+// Load and display
+function loadData() {
+    const table = document.getElementById("tableBody");
+    table.innerHTML = "";
+
+    let data = JSON.parse(localStorage.getItem("workData")) || {};
+
+    let start = getStartOfWeek(new Date());
+    let worked = 0;
+    let off = 0;
+
+    for (let i = 0; i < 7; i++) {
+        let d = new Date(start);
+        d.setDate(start.getDate() + i);
+
+        let key = d.toISOString().split('T')[0];
+        let status = data[key] || "";
+
+        if (status === "Worked") worked++;
+        if (status === "Off") off++;
+
+        let row = `<tr class="${status === 'Worked' ? 'work-row' : 'off-row'}">
+            <td>${d.toDateString()}</td>
+            <td>${status || "-"}</td>
+        </tr>`;
+
+        table.innerHTML += row;
+    }
+
+    document.getElementById("workedCount").innerText = "Worked: " + worked;
+    document.getElementById("offCount").innerText = "Off: " + off;
+}
+
+loadData();
+</script>
+
+</body>
+</html>
